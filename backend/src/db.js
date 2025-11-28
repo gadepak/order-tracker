@@ -1,17 +1,18 @@
-// db.js
-const mysql = require('mysql2/promise');
-const dotenv = require('dotenv');
-dotenv.config();
+const mysql = require('mysql2');
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || '',
-  database: process.env.DB_NAME || 'orders_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  timezone: '+05:30',
-  charset: 'utf8mb4'
+const connection = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
 });
 
-module.exports = pool;
+connection.connect((err) => {
+  if (err) {
+    console.error("❌ Database connection failed:", err.message);
+  } else {
+    console.log("✅ Database connected successfully");
+  }
+});
+
+module.exports = connection;
