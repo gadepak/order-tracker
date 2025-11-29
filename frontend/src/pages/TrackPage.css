@@ -1,0 +1,144 @@
+/* TrackPage.css */
+
+.track-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f7fb;
+  color: #222;
+}
+
+/* Header */
+.tp-header {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 0.85rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.tp-logo {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+}
+
+.tp-subtitle {
+  font-size: 0.8rem;
+}
+
+/* Main card */
+.tp-main {
+  flex: 1;
+  padding: 2.5rem 0;
+}
+
+.tp-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 2rem 2.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.tp-title {
+  font-weight: 600;
+}
+
+/* Input */
+.tp-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.15rem rgba(37, 99, 235, 0.2);
+}
+
+/* Order card */
+.tp-order-card {
+  border-radius: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 1.5rem 1.75rem;
+  background: #ffffff;
+}
+
+/* Timeline */
+.tp-timeline {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tp-step {
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.tp-step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.75rem;
+  z-index: 1;
+}
+
+.tp-step-label {
+  margin-left: 0.35rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.tp-step-line {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin-left: 0.35rem;
+}
+
+.tp-step-active .tp-step-circle {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: white;
+}
+
+.tp-step-active .tp-step-label {
+  color: #111827;
+}
+
+.tp-step-active .tp-step-line {
+  background: #2563eb;
+}
+
+/* Animation */
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Footer */
+.tp-footer {
+  padding: 1rem 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+  .tp-card {
+    padding: 1.4rem 1.2rem;
+  }
+}
