@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import API from "../api";
 import SearchBar from "../components/SearchBar";
 import AddOrderForm from "../components/AddOrderForm";
@@ -15,31 +15,29 @@ export default function AdminDashboard() {
   /* --------------------------------------------
       FETCH ORDERS BASED ON ACTIVE TAB
   --------------------------------------------- */
-  const loadOrders = async () => {
-  try {
-    let url = "/orders/pending/all";  // <-- Pending must have a URL
+  const loadOrders = useCallback(async () => {
+    try {
+      let url = "/orders/pending/all";
 
-    if (activeTab === "completed") url = "/orders/completed/all";
-    if (activeTab === "deleted") url = "/orders/deleted/all";
+      if (activeTab === "completed") url = "/orders/completed/all";
+      if (activeTab === "deleted") url = "/orders/deleted/all";
 
-    const res = await API.get(url);
-    setOrders(res.data.orders);
-    setSelected(null);
-  } catch (err) {
-    if (err.response?.status === 401) navigate("/admin/login");
-  }
-};
-
+      const res = await API.get(url);
+      setOrders(res.data.orders);
+      setSelected(null);
+    } catch (err) {
+      if (err.response?.status === 401) navigate("/admin/login");
+    }
+  }, [activeTab, navigate]);
 
   useEffect(() => {
     loadOrders();
-  }, [activeTab]);
+  }, [loadOrders]);
 
 
   /* --------------------------------------------
       SELECT / UPDATE / DELETE ORDER
   --------------------------------------------- */
-
   const selectOrder = async (order) => {
     try {
       const res = await API.get(`/orders/${order.id}`);
@@ -66,10 +64,10 @@ export default function AdminDashboard() {
     navigate("/");
   };
 
+
   /* --------------------------------------------
       RENDER
   --------------------------------------------- */
-
   return (
     <div className="container-fluid p-4">
 
