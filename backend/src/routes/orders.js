@@ -6,7 +6,8 @@ const {
   getOrder,
   updateStatus,
   getOrderByCode,
-  deleteOrder
+  deleteOrder,
+  listDeletedOrders
 } = require('../controllers/ordersController');
 const { requireAuth } = require('../middleware/authMiddleware');
 
