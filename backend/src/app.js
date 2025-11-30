@@ -5,7 +5,7 @@ require('dotenv').config();
 const ordersRoutes = require('./routes/orders');
 const searchRoutes = require('./routes/search');
 const authRoutes = require('./routes/auth');
-
+//bhjbb
 const app = express();
 app.use(cors());
 app.use(express.json());
