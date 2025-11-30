@@ -40,7 +40,7 @@ async function createOrder(req, res) {
     const newId = result.insertId;
     //const prefix = customer_name.substring(0, 3).toUpperCase();
     const order_code = `ORD-${String(newId).padStart(4, '0')}`;
-
+//jhkjb
 
     await db.query(`UPDATE orders SET order_code = ? WHERE id = ?`, [
       order_code,

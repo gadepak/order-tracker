@@ -7,7 +7,7 @@ const {
   SMTP_PASS,
 } = process.env;
 
-// EMAIL TRANSPORT
+//kjbkjb// EMAIL TRANSPORT
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT || 587),

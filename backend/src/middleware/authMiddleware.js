@@ -6,7 +6,7 @@ function requireAuth(req, res, next) {
   if (!authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Auth token missing' });
   }
-
+//bjhb
   const token = authHeader.split(' ')[1];
 
   try {
