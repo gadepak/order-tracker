@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../api";
 import SearchBar from "../components/SearchBar";
 import AddOrderForm from "../components/AddOrderForm";
-//jbkj
-// MUI importsnklklf
+
 import {
   AppBar,
   Toolbar,
@@ -41,10 +40,23 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
+// ---------- Brand / Design Tokens ----------
+const brandColors = {
+  primary: "#088389",       // main accent
+  primarySoft: "#D7F2EE",   // soft teal background
+  navbar: "#F4F4F0",        // navbar background
+  background: "#F7F8F5",    // page background
+  surface: "#FFFFFF",       // cards
+  border: "#E1E4DA",        // light border
+  textMain: "#111827",      // dark text
+  textSecondary: "#6B7280", // muted text
+};
+
 // ---------- Styled helpers ----------
-const LayoutWrapper = styled("div")(({ theme }) => ({
+const LayoutWrapper = styled("div")(() => ({
   minHeight: "100vh",
-  background: `linear-gradient(135deg, ${theme.palette.grey[100]}, #ffffff)`,
+  backgroundColor: brandColors.background,
+  color: brandColors.textMain,
 }));
 
 const ContentWrapper = styled(Box)(({ theme }) => ({
@@ -54,18 +66,33 @@ const ContentWrapper = styled(Box)(({ theme }) => ({
   },
 }));
 
-const StatusChip = styled(Chip)(({ theme, status }) => {
+const StatusChip = styled(Chip)(({ status }) => {
   const map = {
-    registered: { color: theme.palette.info.main, bg: theme.palette.info.light },
-    processing: { color: theme.palette.warning.main, bg: theme.palette.warning.light },
-    completing: { color: theme.palette.primary.main, bg: theme.palette.primary.light },
-    completed: { color: theme.palette.success.main, bg: theme.palette.success.light },
-    deleted: { color: theme.palette.error.main, bg: theme.palette.error.light },
+    registered: {
+      color: brandColors.primary,
+      bg: brandColors.primarySoft,
+    },
+    processing: {
+      color: "#92400E",
+      bg: "#FEF3C7",
+    },
+    completing: {
+      color: "#1D4ED8",
+      bg: "#DBEAFE",
+    },
+    completed: {
+      color: "#166534",
+      bg: "#DCFCE7",
+    },
+    deleted: {
+      color: "#B91C1C",
+      bg: "#FEE2E2",
+    },
   };
 
   const cfg = map[status] || {
-    color: theme.palette.text.primary,
-    bg: theme.palette.grey[200],
+    color: brandColors.textMain,
+    bg: "#E5E7EB",
   };
 
   return {
@@ -73,15 +100,17 @@ const StatusChip = styled(Chip)(({ theme, status }) => {
     backgroundColor: cfg.bg,
     textTransform: "capitalize",
     fontWeight: 500,
+    borderRadius: 999,
+    letterSpacing: 0.2,
   };
 });
 
-const DetailLabel = styled(Typography)(({ theme }) => ({
-  fontSize: 12,
-  fontWeight: 500,
+const DetailLabel = styled(Typography)(() => ({
+  fontSize: 11,
+  fontWeight: 600,
   textTransform: "uppercase",
-  letterSpacing: 0.5,
-  color: theme.palette.text.secondary,
+  letterSpacing: 0.7,
+  color: brandColors.textSecondary,
 }));
 
 // ------------------------------------
@@ -196,40 +225,111 @@ export default function AdminDashboard() {
         elevation={0}
         color="transparent"
         sx={{
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          backdropFilter: "blur(10px)",
+          backgroundColor: brandColors.navbar,
+          borderBottom: `1px solid ${brandColors.border}`,
+          backdropFilter: "blur(8px)",
         }}
       >
         <Toolbar sx={{ px: { xs: 2, md: 4 } }}>
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Admin Console
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Order Management Dashboard
-            </Typography>
-          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {/* Left side: small subtitle */}
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              <Typography
+                variant="caption"
+                sx={{ color: brandColors.textSecondary, letterSpacing: 1 }}
+              >
+                ADMIN CONSOLE
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: brandColors.textSecondary, opacity: 0.85 }}
+              >
+                Order Management
+              </Typography>
+            </Box>
 
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setShowAddOrder(true)}
-              sx={{ textTransform: "none", borderRadius: 999 }}
+            {/* Center: PROHITEN brand */}
+            <Box
+              sx={{
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
             >
-              New Order
-            </Button>
-            <Tooltip title="Logout">
-              <IconButton color="error" onClick={logout}>
-                <LogoutIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  letterSpacing: 6,
+                  textTransform: "uppercase",
+                  color: brandColors.textMain,
+                }}
+              >
+                prohiten
+              </Typography>
+            </Box>
+
+            {/* Right: Actions */}
+            <Box sx={{ marginLeft: "auto" }}>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setShowAddOrder(true)}
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: 999,
+                    px: 2.5,
+                    boxShadow: "none",
+                    bgcolor: brandColors.primary,
+                    "&:hover": {
+                      bgcolor: "#066C6C",
+                      boxShadow: "0 10px 24px rgba(8, 131, 137, 0.28)",
+                    },
+                  }}
+                >
+                  New Order
+                </Button>
+                <Tooltip title="Logout">
+                  <IconButton
+                    onClick={logout}
+                    sx={{
+                      borderRadius: 999,
+                      border: `1px solid ${brandColors.border}`,
+                      bgcolor: brandColors.surface,
+                      color: "#B91C1C",
+                      "&:hover": {
+                        bgcolor: "#FEE2E2",
+                        borderColor: "#FECACA",
+                      },
+                    }}
+                  >
+                    <LogoutIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            </Box>
+          </Box>
         </Toolbar>
       </AppBar>
 
       <ContentWrapper>
-        <Card elevation={0} sx={{ borderRadius: 3, boxShadow: "0 16px 40px rgba(15, 23, 42, 0.08)" }}>
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            backgroundColor: brandColors.surface,
+            border: `1px solid ${brandColors.border}`,
+            boxShadow: "0 18px 40px rgba(15, 23, 42, 0.05)",
+          }}
+        >
           {/* Card Header */}
           <CardContent>
             <Box
@@ -243,23 +343,38 @@ export default function AdminDashboard() {
               }}
             >
               <Box>
-                <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    letterSpacing: 0.3,
+                    color: brandColors.textMain,
+                  }}
+                >
                   {currentTabLabel}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  sx={{ color: brandColors.textSecondary, mt: 0.3 }}
+                >
                   Track status, update progress and manage order lifecycle.
                 </Typography>
               </Box>
 
               <Stack direction="row" spacing={1} alignItems="center">
                 <Tooltip title="Refresh">
-                  <IconButton onClick={loadOrders}>
-                    <RefreshIcon />
+                  <IconButton
+                    onClick={loadOrders}
+                    sx={{
+                      borderRadius: 999,
+                      border: `1px solid ${brandColors.border}`,
+                    }}
+                  >
+                    <RefreshIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
                 {activeTab !== "deleted" && (
                   <Box sx={{ minWidth: 260 }}>
-                    {/* Your existing SearchBar component */}
                     <SearchBar onSelect={selectOrder} />
                   </Box>
                 )}
@@ -274,11 +389,16 @@ export default function AdminDashboard() {
               indicatorColor="primary"
               variant={isSmall ? "scrollable" : "standard"}
               sx={{
-                borderRadius: 3,
-                backgroundColor: theme.palette.grey[50],
+                borderRadius: 999,
+                backgroundColor: "#ECEDE7",
                 px: 1,
                 py: 0.5,
                 mb: 1,
+                "& .MuiTabs-indicator": {
+                  height: 3,
+                  borderRadius: 999,
+                  backgroundColor: brandColors.primary,
+                },
               }}
             >
               {tabConfig.map((t) => (
@@ -292,7 +412,13 @@ export default function AdminDashboard() {
                         <Chip
                           size="small"
                           label={orders.length}
-                          sx={{ borderRadius: 999, height: 20, fontSize: 11 }}
+                          sx={{
+                            borderRadius: 999,
+                            height: 20,
+                            fontSize: 11,
+                            bgcolor: brandColors.primarySoft,
+                            color: brandColors.primary,
+                          }}
                         />
                       )}
                     </Stack>
@@ -302,7 +428,11 @@ export default function AdminDashboard() {
                     borderRadius: 999,
                     minHeight: 0,
                     py: 0.5,
-                    px: { xs: 1, md: 2 },
+                    px: { xs: 1.5, md: 2.5 },
+                    fontWeight: 500,
+                    "&.Mui-selected": {
+                      color: brandColors.primary,
+                    },
                   }}
                 />
               ))}
@@ -325,8 +455,9 @@ export default function AdminDashboard() {
                 elevation={0}
                 sx={{
                   borderRadius: 3,
-                  border: `1px solid ${theme.palette.divider}`,
+                  border: `1px solid ${brandColors.border}`,
                   overflow: "hidden",
+                  backgroundColor: brandColors.surface,
                 }}
               >
                 <Box
@@ -339,7 +470,10 @@ export default function AdminDashboard() {
                     pb: 1,
                   }}
                 >
-                  <Typography variant="subtitle2" color="text.secondary">
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: brandColors.textSecondary }}
+                  >
                     {orders.length} order{orders.length !== 1 ? "s" : ""} in this view
                   </Typography>
                 </Box>
@@ -360,10 +494,20 @@ export default function AdminDashboard() {
                   </Box>
                 ) : orders.length === 0 ? (
                   <Box sx={{ p: 4, textAlign: "center" }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 0.5 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: 500,
+                        mb: 0.5,
+                        color: brandColors.textMain,
+                      }}
+                    >
                       No orders to show
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      variant="body2"
+                      sx={{ color: brandColors.textSecondary }}
+                    >
                       {activeTab === "deleted"
                         ? "Orders you delete will appear in this list."
                         : "Create a new order or change the filter to see more."}
@@ -380,7 +524,9 @@ export default function AdminDashboard() {
                           <TableCell>Registered</TableCell>
                           <TableCell>Updated</TableCell>
                           <TableCell>Status</TableCell>
-                          {activeTab !== "deleted" && <TableCell align="right">Actions</TableCell>}
+                          {activeTab !== "deleted" && (
+                            <TableCell align="right">Actions</TableCell>
+                          )}
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -391,10 +537,17 @@ export default function AdminDashboard() {
                               key={o.id}
                               hover
                               selected={isSelected}
-                              sx={{ cursor: "pointer" }}
+                              sx={{
+                                cursor: "pointer",
+                                "&.Mui-selected": {
+                                  backgroundColor: "#E6F4F2",
+                                },
+                              }}
                               onClick={() => selectOrder(o)}
                             >
-                              <TableCell sx={{ fontWeight: 600 }}>{o.order_code}</TableCell>
+                              <TableCell sx={{ fontWeight: 600 }}>
+                                {o.order_code}
+                              </TableCell>
                               <TableCell>{o.product_name}</TableCell>
                               <TableCell>{o.customer_name}</TableCell>
                               <TableCell>{formatDate(o.created_at)}</TableCell>
@@ -403,7 +556,10 @@ export default function AdminDashboard() {
                                 <StatusChip size="small" status={o.status} label={o.status} />
                               </TableCell>
                               {activeTab !== "deleted" && (
-                                <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                                <TableCell
+                                  align="right"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   <Tooltip title="Move to Deleted">
                                     <IconButton
                                       size="small"
@@ -428,9 +584,10 @@ export default function AdminDashboard() {
                 elevation={0}
                 sx={{
                   borderRadius: 3,
-                  border: `1px solid ${theme.palette.divider}`,
+                  border: `1px solid ${brandColors.border}`,
                   p: 3,
                   minHeight: 260,
+                  backgroundColor: brandColors.surface,
                 }}
               >
                 {!selected && !loading && (
@@ -444,10 +601,20 @@ export default function AdminDashboard() {
                       textAlign: "center",
                     }}
                   >
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 0.5 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: 500,
+                        mb: 0.5,
+                        color: brandColors.textMain,
+                      }}
+                    >
                       No order selected
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      variant="body2"
+                      sx={{ color: brandColors.textSecondary }}
+                    >
                       Click an order from the table to inspect details and update status.
                     </Typography>
                   </Box>
@@ -455,40 +622,71 @@ export default function AdminDashboard() {
 
                 {selected && (
                   <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1.5 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1.5,
+                      }}
+                    >
                       <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 700,
+                            letterSpacing: 0.3,
+                            color: brandColors.textMain,
+                          }}
+                        >
                           {selected.order_code}
                         </Typography>
                         <StatusChip
                           size="small"
                           status={selected.status}
                           label={selected.status}
-                          sx={{ mt: 0.5 }}
+                          sx={{ mt: 0.75 }}
                         />
                       </Box>
                     </Box>
 
                     <Box sx={{ mb: 2.5 }}>
                       <DetailLabel>Product</DetailLabel>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: 500, color: brandColors.textMain }}
+                      >
                         {selected.product_name}
                       </Typography>
                     </Box>
 
                     <Box sx={{ mb: 2 }}>
                       <DetailLabel>Customer</DetailLabel>
-                      <Typography variant="body2">{selected.customer_name}</Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: brandColors.textMain }}
+                      >
+                        {selected.customer_name}
+                      </Typography>
                     </Box>
 
                     <Stack direction="row" spacing={3} sx={{ mb: 2 }}>
                       <Box>
                         <DetailLabel>Registered</DetailLabel>
-                        <Typography variant="body2">{formatDate(selected.created_at)}</Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: brandColors.textSecondary }}
+                        >
+                          {formatDate(selected.created_at)}
+                        </Typography>
                       </Box>
                       <Box>
                         <DetailLabel>Last Updated</DetailLabel>
-                        <Typography variant="body2">{formatDate(selected.updated_at)}</Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: brandColors.textSecondary }}
+                        >
+                          {formatDate(selected.updated_at)}
+                        </Typography>
                       </Box>
                     </Stack>
 
@@ -506,9 +704,33 @@ export default function AdminDashboard() {
                             <Button
                               key={s}
                               size="small"
-                              variant={selected.status === s ? "contained" : "outlined"}
+                              variant={
+                                selected.status === s ? "contained" : "outlined"
+                              }
                               onClick={() => updateStatus(selected.id, s)}
-                              sx={{ textTransform: "capitalize", borderRadius: 999 }}
+                              sx={{
+                                textTransform: "capitalize",
+                                borderRadius: 999,
+                                px: 1.6,
+                                fontSize: 12,
+                                ...(selected.status === s
+                                  ? {
+                                      bgcolor: brandColors.primary,
+                                      borderColor: brandColors.primary,
+                                      "&:hover": {
+                                        bgcolor: "#066C6C",
+                                        borderColor: "#066C6C",
+                                      },
+                                    }
+                                  : {
+                                      borderColor: brandColors.border,
+                                      color: brandColors.textSecondary,
+                                      "&:hover": {
+                                        borderColor: brandColors.primary,
+                                        color: brandColors.primary,
+                                      },
+                                    }),
+                              }}
                             >
                               {s}
                             </Button>
@@ -520,7 +742,12 @@ export default function AdminDashboard() {
                           color="error"
                           startIcon={<DeleteOutlineIcon />}
                           onClick={() => openDeleteDialog(selected)}
-                          sx={{ mt: "auto", alignSelf: "stretch", borderRadius: 999 }}
+                          sx={{
+                            mt: "auto",
+                            alignSelf: "stretch",
+                            borderRadius: 999,
+                            textTransform: "none",
+                          }}
                         >
                           Move to Deleted
                         </Button>
@@ -543,10 +770,7 @@ export default function AdminDashboard() {
       >
         <DialogTitle>Create New Order</DialogTitle>
         <DialogContent dividers>
-          <AddOrderForm
-            onClose={() => setShowAddOrder(false)}
-            onCreated={loadOrders}
-          />
+          <AddOrderForm onClose={() => setShowAddOrder(false)} onCreated={loadOrders} />
         </DialogContent>
       </Dialog>
 
@@ -561,8 +785,8 @@ export default function AdminDashboard() {
         <DialogContent dividers>
           <Typography variant="body2">
             Are you sure you want to move{" "}
-            <strong>{orderToDelete?.order_code}</strong> to the Deleted list?
-            You can still see it later in the “Deleted” tab.
+            <strong>{orderToDelete?.order_code}</strong> to the Deleted list? You can
+            still see it later in the “Deleted” tab.
           </Typography>
         </DialogContent>
         <DialogActions>
