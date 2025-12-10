@@ -1,63 +1,66 @@
 const db = require('../db');
-const { sendOrderStatusNotification } = require('../utils/notifier');
 
-const { sendWhatsApp } = require('../utils/whatsapp');
-
-// CREATE
+// ==========================
+// CREATE ORDER
+// ==========================
 async function createOrder(req, res) {
   try {
-     console.log("REQ BODY:", req.body);
-    // throw new Error("INTENTIONAL ERROR FROM createOrder");
+    console.log("REQ BODY:", req.body);
+
     const {
-      product_name,
-      customer_name,
-      quantity,
-      product_description,
-      customer_email,   
-      customer_phone,   
+      tray_type,
+      serial_no,
+      make,
+      dimensions,
+      nos,
+      size,
+      status,
+      payment_status,
+      credit_days
     } = req.body;
 
+    // INSERT NEW STRUCTURE FIELDS
     const [result] = await db.query(
       `INSERT INTO orders (
-        product_name,
-        customer_name,
-        quantity,
-        product_description,
-        customer_email,
-        customer_phone
+        tray_type,
+        serial_no,
+        make,
+        dimensions,
+        nos,
+        size,
+        status,
+        payment_status,
+        credit_days
       )
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        product_name,
-        customer_name,
-        quantity,
-        product_description,
-        customer_email || null,
-        customer_phone || null,
+        tray_type,
+        serial_no,
+        make,
+        dimensions,
+        nos,
+        size,
+        status || "CUTTING",
+        payment_status || "PAID",
+        payment_status === "NOT_PAID" ? credit_days : null
       ]
     );
 
     const newId = result.insertId;
-    //const prefix = customer_name.substring(0, 3).toUpperCase();
-    const order_code = `ORD-${String(newId).padStart(4, '0')}`;
-//jhkjb
+
+    // Generate Order Code
+    const order_code = `ORD-${String(newId).padStart(4, "0")}`;
 
     await db.query(`UPDATE orders SET order_code = ? WHERE id = ?`, [
       order_code,
       newId,
     ]);
 
-    res.json({ success: true, message: "Order created", order_code });
-    if (customer_phone) {
-  const waMessage =
-    `Hi ${customer_name}! 👋\n\n` +
-    `Your order *${order_code}* has been *registered*.\n\n` +
-    `Product: ${product_name}\n` +
-    `Quantity: ${quantity}\n\n` +
-    `We'll notify you as it moves to processing, completing, and completed.`;
-
-  sendWhatsApp(customer_phone, waMessage);
-}
+    res.json({
+      success: true,
+      message: "Order created",
+      order_code,
+    });
 
   } catch (err) {
     console.error(err);
@@ -65,6 +68,9 @@ async function createOrder(req, res) {
   }
 }
 
+// ==========================
+// GET ORDER BY ORDER CODE
+// ==========================
 async function getOrderByCode(req, res) {
   try {
     const { code } = req.params;
@@ -74,9 +80,8 @@ async function getOrderByCode(req, res) {
       [code]
     );
 
-    if (!rows.length) {
+    if (!rows.length)
       return res.status(404).json({ error: "not found" });
-    }
 
     res.json({ order: rows[0] });
 
@@ -86,12 +91,14 @@ async function getOrderByCode(req, res) {
   }
 }
 
-// PENDING ORDERS  (is_deleted = 0 AND status != completed)
+// ==========================
+// LIST PENDING (NOT COMPLETED)
+// ==========================
 async function listPending(req, res) {
   try {
     const [rows] = await db.query(
       `SELECT * FROM orders
-       WHERE is_deleted = 0 AND status != 'completed'
+       WHERE is_deleted = 0 AND status != 'COMPLETED'
        ORDER BY updated_at DESC`
     );
     res.json({ orders: rows });
@@ -101,12 +108,14 @@ async function listPending(req, res) {
   }
 }
 
-// COMPLETED ORDERS  (is_deleted = 0 AND status = completed)
+// ==========================
+// LIST COMPLETED
+// ==========================
 async function listCompleted(req, res) {
   try {
     const [rows] = await db.query(
       `SELECT * FROM orders
-       WHERE is_deleted = 0 AND status = 'completed'
+       WHERE is_deleted = 0 AND status = 'COMPLETED'
        ORDER BY updated_at DESC`
     );
     res.json({ orders: rows });
@@ -116,7 +125,9 @@ async function listCompleted(req, res) {
   }
 }
 
-// DELETED ORDERS (is_deleted = 1)
+// ==========================
+// LIST DELETED
+// ==========================
 async function listDeleted(req, res) {
   try {
     const [rows] = await db.query(
@@ -131,7 +142,9 @@ async function listDeleted(req, res) {
   }
 }
 
-// GET SINGLE ORDER
+// ==========================
+// GET ORDER BY ID
+// ==========================
 async function getOrder(req, res) {
   try {
     const { id } = req.params;
@@ -152,7 +165,34 @@ async function getOrder(req, res) {
   }
 }
 
-// UPDATE STATUS
+// ==========================
+// UPDATE PAYMENT STATUS
+// ==========================
+async function updatePayment(req, res) {
+  try {
+    const { id } = req.params;
+    const { payment_status } = req.body;
+
+    await db.query(
+      `UPDATE orders 
+       SET payment_status = ?,
+           credit_days = IF(? = 'PAID', NULL, credit_days),
+           updated_at = NOW()
+       WHERE id = ?`,
+      [payment_status, payment_status, id]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Payment update failed" });
+  }
+}
+
+// ==========================
+// UPDATE ORDER STATUS
+// ==========================
 async function updateStatus(req, res) {
   try {
     const { id } = req.params;
@@ -164,27 +204,8 @@ async function updateStatus(req, res) {
     );
 
     const [rows] = await db.query(`SELECT * FROM orders WHERE id = ?`, [id]);
-    const updatedOrder = rows[0];
 
-    // send email / notification (if email exists)
-    sendOrderStatusNotification(updatedOrder).catch(err =>
-      console.error("Notification error (email):", err)
-    );
-
-    // 📲 send WhatsApp notification (if phone exists)
-    if (updatedOrder.customer_phone) {
-      const waMessage =
-        `Hi ${updatedOrder.customer_name},\n\n` +
-        `Your order *${updatedOrder.order_code || `#${updatedOrder.id}`}* ` +
-        `for "${updatedOrder.product_name}" is now *${status}*.\n\n` +
-        `Thank you!`;
-
-      // fire-and-forget so it doesn't block response
-      sendWhatsApp(updatedOrder.customer_phone, waMessage)
-        .catch(err => console.error("Notification error (WhatsApp):", err));
-    }
-
-    res.json({ order: updatedOrder });
+    res.json({ order: rows[0] });
 
   } catch (err) {
     console.error(err);
@@ -192,7 +213,9 @@ async function updateStatus(req, res) {
   }
 }
 
-// DELETE (SET is_deleted = 1)
+// ==========================
+// SOFT DELETE ORDER
+// ==========================
 async function deleteOrder(req, res) {
   try {
     const { id } = req.params;
@@ -210,13 +233,31 @@ async function deleteOrder(req, res) {
   }
 }
 
+async function listPendingPayment(req, res) {
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM orders
+       WHERE is_deleted = 0 
+         AND payment_status = 'NOT_PAID'
+       ORDER BY updated_at DESC`
+    );
+    res.json({ orders: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "pending payment failed" });
+  }
+}
+
+
 module.exports = {
   createOrder,
   listPending,
   listCompleted,
   listDeleted,
+  listPendingPayment,
   getOrder,
   updateStatus,
   deleteOrder,
   getOrderByCode,
+  updatePayment
 };

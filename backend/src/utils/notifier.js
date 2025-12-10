@@ -5,9 +5,10 @@ const {
   SMTP_PORT,
   SMTP_USER,
   SMTP_PASS,
+  NOTIFY_EMAIL // optional admin notification email
 } = process.env;
 
-//kjbkjb// EMAIL TRANSPORT
+// EMAIL TRANSPORT
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT || 587),
@@ -20,48 +21,46 @@ const transporter = nodemailer.createTransport({
 
 /**
  * Send notification when order status changes
- * Expects: order_code, status, customer_name, customer_email
+ * NEW STRUCTURE -> customer fields do NOT exist
+ * So we notify only admin or skip silently.
  */
 async function sendOrderStatusNotification(order) {
   if (!order) return;
 
   const {
     order_code,
-    status,
-    customer_name,
-    customer_email,
+    status
   } = order;
 
-  if (!customer_email) {
-    console.log("No email for this customer, skipping notification.");
+  // If you want admin notifications:
+  const targetEmail = NOTIFY_EMAIL || SMTP_USER;
+
+  if (!targetEmail) {
+    console.log("No notification email configured. Skipping email.");
     return;
   }
 
   const friendlyStatus = status
     ? status.charAt(0).toUpperCase() + status.slice(1)
-    : "updated";
+    : "Updated";
 
-  const text = `Hi ${customer_name || "Customer"}, your order ${
-    order_code || ""
-  } is now "${friendlyStatus}".`;
-
-  const subject = `Order ${order_code} status updated to ${friendlyStatus}`;
+  const subject = `Order ${order_code} status updated`;
+  const text = `Order ${order_code} status changed to: ${friendlyStatus}`;
 
   try {
     await transporter.sendMail({
       from: `"Order Tracker" <${SMTP_USER}>`,
-      to: customer_email,
+      to: targetEmail,
       subject,
       text,
       html: `
-        <p>Hi ${customer_name || "Customer"},</p>
-        <p>Your order <strong>${order_code}</strong> status has been updated to
-        <strong>${friendlyStatus}</strong>.</p>
-        <p>Thank you for shopping with us!</p>
+        <p><strong>Order Update</strong></p>
+        <p>Order Code: <strong>${order_code}</strong></p>
+        <p>New Status: <strong>${friendlyStatus}</strong></p>
       `,
     });
 
-    console.log("Status email sent to", customer_email);
+    console.log(`Status email sent to admin: ${targetEmail}`);
   } catch (err) {
     console.error("Failed to send status email:", err.message);
   }

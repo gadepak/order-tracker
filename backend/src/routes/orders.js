@@ -6,40 +6,37 @@ const {
   listPending,
   listCompleted,
   listDeleted,
+  listPendingPayment, 
   getOrder,
   updateStatus,
   deleteOrder,
-  getOrderByCode
+  getOrderByCode,
+  updatePayment   // ← NEW
 } = require("../controllers/ordersController");
 
 const { requireAuth } = require("../middleware/authMiddleware");
 
 
-// ------------------------------------------------------
-// PUBLIC ROUTE (NO AUTH) — Track by Order Code
-// ------------------------------------------------------
+// PUBLIC: Track Order
 router.get("/by-code/:code", getOrderByCode);
 
-
-// ------------------------------------------------------
-// PROTECTED ROUTES (Admin Only)
-// ------------------------------------------------------
-
-// List routes
+// ADMIN ROUTES
 router.get("/pending/all", requireAuth, listPending);
 router.get("/completed/all", requireAuth, listCompleted);
 router.get("/deleted/all", requireAuth, listDeleted);
 
-// Create / Update / Delete
+router.get("/pending-payment/all", requireAuth, listPendingPayment); 
+
 router.post("/", requireAuth, createOrder);
+
 router.patch("/:id/status", requireAuth, updateStatus);
+
+// NEW — UPDATE PAYMENT STATUS
+router.patch("/:id/payment", requireAuth, updatePayment);
+
 router.delete("/:id", requireAuth, deleteOrder);
 
-
-// ------------------------------------------------------
-// SINGLE ORDER BY ID (KEEP **LAST** TO AVOID CONFLICT)
-// ------------------------------------------------------
+// KEEP LAST
 router.get("/:id", requireAuth, getOrder);
-
 
 module.exports = router;

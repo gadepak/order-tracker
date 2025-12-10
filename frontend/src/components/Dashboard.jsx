@@ -14,7 +14,7 @@ export default function Dashboard() {
 
   async function fetchOrders() {
     try {
-      const res = await API.get('/orders');
+      const res = await API.get('/orders/pending/all');
       setOrders(res.data.orders);
     } catch (err) {
       console.error('Fetch orders error:', err);
@@ -64,17 +64,18 @@ export default function Dashboard() {
         {/* Left side - Recent Orders */}
         <div className="col-8">
           <h5>Recent Orders</h5>
-          <table className="table">
+          <table className="table table-hover">
             <thead>
-  <tr>
-    <th>Order</th>
-    <th>Product</th>
-    <th>Customer</th>
-    <th>Registered Date</th>
-    <th>Last Updated</th>
-    <th>Status</th>
-  </tr>
-</thead>
+              <tr>
+                <th>Order Code</th>
+                <th>Tray Type</th>
+                <th>S.No</th>
+                <th>Make</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>Status</th>
+              </tr>
+            </thead>
 
             <tbody>
               {orders.map(o => (
@@ -84,15 +85,12 @@ export default function Dashboard() {
                   style={{ cursor: 'pointer' }}
                 >
                   <td>{o.order_code}</td>
-                  <td>{o.product_name}</td>
-                  <td>{o.customer_name}</td>
+                  <td>{o.tray_type}</td>
+                  <td>{o.serial_no}</td>
+                  <td>{o.make}</td>
                   <td>{new Date(o.created_at).toLocaleString()}</td>
                   <td>{new Date(o.updated_at).toLocaleString()}</td>
                   <td>{o.status}</td>
-                  
-{/* <td>{new Date(o.updated_at).toLocaleString()}</td>
-<td>{o.status}</td> */}
-
                 </tr>
               ))}
             </tbody>
@@ -104,17 +102,19 @@ export default function Dashboard() {
           {selected ? (
             <div className="card p-3">
 
-              <h6>{selected.order_code}</h6>
-              <p className="fw-bold">{selected.product_name}</p>
-              <p className="text-muted">{selected.customer_name}</p>
+              <h6><strong>{selected.order_code}</strong></h6>
 
-              <p><strong>Description:</strong><br />{selected.product_description || "No description"}</p>
-              <p><strong>Quantity:</strong> {selected.quantity}</p>
+              <p><strong>Tray Type:</strong> {selected.tray_type}</p>
+              <p><strong>S.No:</strong> {selected.serial_no}</p>
+              <p><strong>Make:</strong> {selected.make}</p>
+              <p><strong>Dimensions:</strong> {selected.dimensions}</p>
+              <p><strong>Nos:</strong> {selected.nos}</p>
+              <p><strong>Size:</strong> {selected.size}</p>
 
-              <div>
+              <div className="mt-3">
                 <strong>Status:</strong>
                 <div className="btn-group mt-2">
-                  {['registered', 'processing', 'completing', 'completed'].map(s => (
+                  {["CUTTING", "PERFORATED", "BENDING", "COMPLETED"].map(s => (
                     <button
                       key={s}
                       className="btn btn-sm btn-outline-secondary"

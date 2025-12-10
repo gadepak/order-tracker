@@ -1,40 +1,57 @@
 import React, { useState } from "react";
-import { Box, TextField, Stack, Button } from "@mui/material";
+import { Box, TextField, Stack, Button, MenuItem } from "@mui/material";
 import API from "../api";
-//khif
+
 export default function AddOrderForm({ onClose, onCreated }) {
-  const [productName, setProductName] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [productDescription, setProductDescription] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
+  const [trayType, setTrayType] = useState("");
+  const [serialNo, setSerialNo] = useState("");
+  const [make, setMake] = useState("");
+  const [dimensions, setDimensions] = useState("");
+  const [nos, setNos] = useState("");
+  const [size, setSize] = useState("");
+  const [status, setStatus] = useState("CUTTING");
+
+  // NEW PAYMENT FIELDS
+  const [paymentStatus, setPaymentStatus] = useState("PAID");
+  const [creditDays, setCreditDays] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!productName || !customerName||!customerEmail) return;
+
+    if (!trayType || !serialNo || !make) {
+      alert("Tray Type, S.No, and Make are required");
+      return;
+    }
+
+    if (paymentStatus === "NOT_PAID" && (!creditDays || Number(creditDays) < 1)) {
+      alert("Please enter valid credit days");
+      return;
+    }
 
     try {
       setSubmitting(true);
 
       await API.post("/orders", {
-        product_name: productName,
-        customer_name: customerName,
-        quantity: Number(quantity) || 1,
-        product_description: productDescription,
-        customer_email: customerEmail ,
-        customer_phone: customerPhone ,
+        tray_type: trayType,
+        serial_no: serialNo,
+        make,
+        dimensions,
+        nos,
+        size,
+        status,
+
+        // NEW PAYMENT FIELDS
+        payment_status: paymentStatus,
+        credit_days: paymentStatus === "NOT_PAID" ? Number(creditDays) : null,
       });
 
-      if (typeof onCreated === "function") {
-        onCreated();
-      }
-      if (typeof onClose === "function") {
-        onClose();
-      }
+      if (onCreated) onCreated();
+      if (onClose) onClose();
+
     } catch (err) {
-      console.error(err);
+      console.error("Create order error:", err);
       alert("Failed to create order");
     } finally {
       setSubmitting(false);
@@ -45,78 +62,108 @@ export default function AddOrderForm({ onClose, onCreated }) {
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        mt: 1,
+        width: 400,
+      }}
     >
+      <h4>Add New Order</h4>
+
       <TextField
-        label="Product Name"
-        value={productName}
-        onChange={(e) => setProductName(e.target.value)}
+        label="Tray Type"
+        value={trayType}
+        onChange={(e) => setTrayType(e.target.value)}
         fullWidth
         required
       />
 
       <TextField
-        label="Customer Name"
-        value={customerName}
-        onChange={(e) => setCustomerName(e.target.value)}
+        label="S.No"
+        value={serialNo}
+        onChange={(e) => setSerialNo(e.target.value)}
         fullWidth
         required
       />
 
-      {/* NEW: Customer Email */}
       <TextField
-        label="Customer Email"
-        type="email"
-        value={customerEmail}
-        onChange={(e) => setCustomerEmail(e.target.value)}
+        label="Make"
+        value={make}
+        onChange={(e) => setMake(e.target.value)}
         fullWidth
-        placeholder="customer@example.com"
+        required
       />
 
-      {/* NEW: Customer Phone (WhatsApp) */}
       <TextField
-        label="Customer Phone (WhatsApp)"
-        type="tel"
-        value={customerPhone}
-        onChange={(e) => setCustomerPhone(e.target.value)}
+        label="Dimensions"
+        value={dimensions}
+        onChange={(e) => setDimensions(e.target.value)}
         fullWidth
-        placeholder="+91XXXXXXXXXX"
+        placeholder="e.g., 100 x 200 mm"
       />
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+      <TextField
+        label="Nos"
+        type="number"
+        value={nos}
+        onChange={(e) => setNos(e.target.value)}
+        fullWidth
+      />
+
+      <TextField
+        label="Size"
+        value={size}
+        onChange={(e) => setSize(e.target.value)}
+        fullWidth
+      />
+
+      {/* STATUS DROPDOWN */}
+      <TextField
+        select
+        label="Status"
+        value={status}
+        onChange={(e) => setStatus(e.target.value)}
+        fullWidth
+      >
+        {["CUTTING", "PERFORATED", "BENDING", "COMPLETED"].map((s) => (
+          <MenuItem key={s} value={s}>
+            {s}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      {/* PAYMENT STATUS DROPDOWN */}
+      <TextField
+        select
+        label="Payment Status"
+        value={paymentStatus}
+        onChange={(e) => setPaymentStatus(e.target.value)}
+        fullWidth
+      >
+        <MenuItem value="PAID">Paid</MenuItem>
+        <MenuItem value="NOT_PAID">Not Paid</MenuItem>
+      </TextField>
+
+      {/* CREDIT DAYS FIELD — ONLY SHOW IF NOT PAID */}
+      {paymentStatus === "NOT_PAID" && (
         <TextField
-          label="Quantity"
+          label="Credit Days"
           type="number"
+          value={creditDays}
+          onChange={(e) => setCreditDays(e.target.value)}
           inputProps={{ min: 1 }}
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
+          required
           fullWidth
         />
-      </Stack>
+      )}
 
-      <TextField
-        label="Product Description"
-        value={productDescription}
-        onChange={(e) => setProductDescription(e.target.value)}
-        fullWidth
-        multiline
-        minRows={3}
-      />
-
-      <Stack
-        direction="row"
-        spacing={1}
-        justifyContent="flex-end"
-        sx={{ mt: 1 }}
-      >
+      <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
         <Button onClick={onClose} disabled={submitting}>
           Cancel
         </Button>
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={submitting}
-        >
+        <Button type="submit" variant="contained" disabled={submitting}>
           {submitting ? "Creating..." : "Create Order"}
         </Button>
       </Stack>

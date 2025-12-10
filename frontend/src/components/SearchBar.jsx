@@ -13,7 +13,7 @@ export default function SearchBar({ onSelect }) {
         const res = await API.get('/search', { params: { q } });
         setSuggestions(res.data.results || []);
       } catch (err) {
-        console.error(err);
+        console.error('Search error:', err);
       }
     }, 200);
 
@@ -24,7 +24,7 @@ export default function SearchBar({ onSelect }) {
     <div style={{ position: 'relative' }}>
       <input
         className="form-control"
-        placeholder="Search by product, customer, order code..."
+        placeholder="Search by order code, tray type, make, dimensions..."
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />
@@ -34,14 +34,30 @@ export default function SearchBar({ onSelect }) {
           className="list-group mt-1"
           style={{ position: 'absolute', width: '100%', zIndex: 999 }}
         >
-          {suggestions.map(s => (
+          {suggestions.map((s) => (
             <li
               key={s.id}
               className="list-group-item list-group-item-action"
               onClick={() => onSelect(s)}
+              style={{ cursor: "pointer" }}
             >
-              <strong>{s.order_code}</strong> — {s.product_name}
-              <div className="small">{s.customer_name}</div>
+              <strong>{s.order_code}</strong>
+
+              <div className="small text-muted">
+                {s.tray_type && <>Tray: {s.tray_type}</>}
+              </div>
+
+              <div className="small text-muted">
+                {s.make && <>Make: {s.make}</>}
+              </div>
+
+              <div className="small text-muted">
+                {s.dimensions && <>Dim: {s.dimensions}</>}
+              </div>
+
+              <div className="small">
+                Status: <strong>{s.status}</strong>
+              </div>
             </li>
           ))}
         </ul>

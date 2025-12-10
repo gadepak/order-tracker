@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
- baseURL: "http://100.110.154.73:4000/api",
+ baseURL: "http://localhost:4000/api",
   //baseURL: "https://order-tracker-production-535d.up.railway.app/api",
   //"https://order-tracker-production-535d.up.railway.app/api",
 });
