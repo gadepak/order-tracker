@@ -1,4 +1,4 @@
-// app.js (paste this whole file, replacing your current app.js)
+// app.js (replace your current app.js with this)
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -6,8 +6,9 @@ require('dotenv').config();
 const ordersRoutes = require('./routes/orders');
 const searchRoutes = require('./routes/search');
 const authRoutes = require('./routes/auth');
+const reminderRoutes = require('./routes/orderReminders'); // require is fine here
 
-const app = express();
+const app = express(); // <<< MUST be created BEFORE app.use(...)
 app.use(cors());
 app.use(express.json());
 
@@ -35,6 +36,7 @@ function ensureWhatsAppPrefix(num){
     return 'whatsapp:' + num.replace(/^whatsapp:/i,'').trim();
   }
   const digits = num.replace(/[^+\d]/g,'');
+
   if(/^\+?\d+$/.test(digits)) return 'whatsapp:' + digits;
   return num;
 }
@@ -45,14 +47,16 @@ const smtpHost = rawSmtpHost.replace(/^https?:\/\//i,'').trim();
 const smtpPort = Number(process.env.SMTP_PORT || 465);
 
 // sanitized examples to use in your main code (do not log secrets)
+// NOTE: use the ACCOUNT_SID/AUTH_TOKEN names used elsewhere in your app
 const sanitizedEnvs = {
   smtpHost, smtpPort,
   smtpUserPresent: !!process.env.SMTP_USER,
   smtpPassPresent: !!process.env.SMTP_PASS,
-  twilioSidPresent: !!process.env.TWILIO_SID,
-  twilioAuthPresent: !!process.env.TWILIO_AUTH,
-  waFromRaw: (process.env.WHATSAPP_FROM || '').slice(0,80),
-  waFromSanitized: ensureWhatsAppPrefix(process.env.WHATSAPP_FROM || '')
+  // check the correct Twilio env names
+  twilioSidPresent: !!process.env.TWILIO_ACCOUNT_SID,
+  twilioAuthPresent: !!process.env.TWILIO_AUTH_TOKEN,
+  waFromRaw: (process.env.TWILIO_WHATSAPP_FROM || '').slice(0,80),
+  waFromSanitized: ensureWhatsAppPrefix(process.env.TWILIO_WHATSAPP_FROM || '')
 };
 
 // Debug endpoint: show what the process sees (no secret values)
@@ -62,7 +66,7 @@ app.get('/debug/envs', (req, res) => {
     smtpHostSanitized: smtpHost,
     smtpPort,
     smtpUserPresent: !!process.env.SMTP_USER,
-    waFromRaw: (process.env.WHATSAPP_FROM || '').slice(0,80),
+    waFromRaw: (process.env.TWILIO_WHATSAPP_FROM || '').slice(0,80),
     waFromSanitized: sanitizedEnvs.waFromSanitized
   });
 });
@@ -70,7 +74,7 @@ app.get('/debug/envs', (req, res) => {
 // Debug WA check: normalize a 'to' number (body: { to: "+91..." })
 app.post('/debug/wa-check', express.json(), (req, res) => {
   const toRaw = req.body && req.body.to ? String(req.body.to) : '';
-  const waFrom = ensureWhatsAppPrefix(process.env.WHATSAPP_FROM || '');
+  const waFrom = ensureWhatsAppPrefix(process.env.TWILIO_WHATSAPP_FROM || '');
   const waTo = ensureWhatsAppPrefix(toRaw || process.env.TEST_WA_TO || '');
   const waFromValid = !!/^whatsapp:\+\d{6,15}$/.test(waFrom);
   const waToValid = !!/^whatsapp:\+\d{6,15}$/.test(waTo);
@@ -101,6 +105,7 @@ app.get('/debug/send-email', async (req, res) => { ... });
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api', reminderRoutes); // mount reminders here alongside other api routes
 
 // PORT must be defined
 const PORT = process.env.PORT || 4000;

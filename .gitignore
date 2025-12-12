@@ -1,14 +1,69 @@
-# env files
+# ============================
+#  ENV FILES (VERY IMPORTANT)
+# ============================
+.env
+*.env
 backend/.env
 frontend/.env
-.env
 
-# node modules
+# If someone accidentally creates env.local, env.test, etc.
+*.env.local
+*.env.development
+*.env.production
+*.env.test
+
+# ============================
+#  NODE MODULES
+# ============================
 node_modules/
 backend/node_modules/
 frontend/node_modules/
 
-# logs
+# ============================
+#  BUILD / DIST FILES
+# ============================
+dist/
+build/
+backend/build/
+frontend/build/
+
+# React build output
+frontend/.parcel-cache/
+frontend/.next/
+.next/
+
+# ============================
+#  LOG FILES
+# ============================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+logs/
+*.log
+
+# ============================
+#  OS / EDITOR FILES
+# ============================
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
+
+# ============================
+#  OPTIONAL BUT GOOD
+# ============================
+# cache
+.cache/
+.temp/
+
+# local SQLite files (if ever used)
+*.sqlite
+*.sqlite-journal
+
+# lock files (optional)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

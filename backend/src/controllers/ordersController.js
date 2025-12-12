@@ -1,8 +1,71 @@
 const db = require('../db');
+const twilio = require('twilio');
+const nodemailer = require('nodemailer');
+
+const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
+  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+  : null;
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
+  secure: false, // upgrade later with STARTTLS
+  auth: process.env.SMTP_USER ? {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  } : undefined
+});
+
+// helper: send WhatsApp (if configured)
+async function sendWhatsApp(toPhone, body) {
+  if (!twilioClient) {
+    console.warn("Twilio not configured; skipping WhatsApp send");
+    return;
+  }
+  if (!process.env.TWILIO_WHATSAPP_FROM) {
+    console.warn("TWILIO_WHATSAPP_FROM not set; skipping WhatsApp send");
+    return;
+  }
+  try {
+    await twilioClient.messages.create({
+      from: process.env.TWILIO_WHATSAPP_FROM, // e.g. 'whatsapp:+1415XXXXXXX'
+      to: toPhone.startsWith('whatsapp:') ? toPhone : `whatsapp:${toPhone}`,
+      body
+    });
+  } catch (err) {
+    console.error("WhatsApp send failed:", err);
+  }
+}
+
+// helper: send email (if configured)
+async function sendEmail(toEmail, subject, text) {
+  if (!transporter) {
+    console.warn("SMTP transporter not configured; skipping email");
+    return;
+  }
+  if (!process.env.SMTP_FROM) {
+    console.warn("SMTP_FROM not set; skipping email");
+    return;
+  }
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: toEmail,
+      subject,
+      text
+    });
+  } catch (err) {
+    console.error("Email send failed:", err);
+  }
+}
 
 // ==========================
 // CREATE ORDER
 // ==========================
+// ==========================
+// CREATE ORDER
+// ==========================
+// CREATE ORDER
 async function createOrder(req, res) {
   try {
     console.log("REQ BODY:", req.body);
@@ -16,12 +79,18 @@ async function createOrder(req, res) {
       size,
       status,
       payment_status,
-      credit_days
+      credit_days,
+      email,
+      phone
     } = req.body;
 
-    // INSERT NEW STRUCTURE FIELDS
+    // Generate order_code BEFORE insert
+    const order_code = `ORD-${Date.now()}`;
+
+    // INSERT including email & phone & order_code
     const [result] = await db.query(
       `INSERT INTO orders (
+        order_code,
         tray_type,
         serial_no,
         make,
@@ -30,10 +99,13 @@ async function createOrder(req, res) {
         size,
         status,
         payment_status,
-        credit_days
+        credit_days,
+        email,
+        phone
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        order_code,
         tray_type,
         serial_no,
         make,
@@ -42,23 +114,18 @@ async function createOrder(req, res) {
         size,
         status || "CUTTING",
         payment_status || "PAID",
-        payment_status === "NOT_PAID" ? credit_days : null
+        payment_status === "NOT_PAID" ? credit_days : null,
+        email || null,
+        phone || null
       ]
     );
 
     const newId = result.insertId;
 
-    // Generate Order Code
-    const order_code = `ORD-${String(newId).padStart(4, "0")}`;
-
-    await db.query(`UPDATE orders SET order_code = ? WHERE id = ?`, [
-      order_code,
-      newId,
-    ]);
-
     res.json({
       success: true,
       message: "Order created",
+      id: newId,
       order_code,
     });
 
@@ -193,6 +260,7 @@ async function updatePayment(req, res) {
 // ==========================
 // UPDATE ORDER STATUS
 // ==========================
+// UPDATE ORDER STATUS (with notifications)
 async function updateStatus(req, res) {
   try {
     const { id } = req.params;
@@ -203,9 +271,37 @@ async function updateStatus(req, res) {
       [status, id]
     );
 
+    // Fetch updated order (so we have email/phone/order_code)
     const [rows] = await db.query(`SELECT * FROM orders WHERE id = ?`, [id]);
 
-    res.json({ order: rows[0] });
+    if (!rows.length) return res.status(404).json({ error: "not found" });
+
+    const order = rows[0];
+
+    // Compose notification text
+    const shortMsg = `Order ${order.order_code || `#${order.id}`} status updated to: ${status}.`;
+    const longMsg = `Hello,\n\nYour order ${order.order_code || `#${order.id}`} status has changed to *${status}*.\n\nYou can track your order with the order code.\n\nRegards,\nYour Company`;
+
+    // Send WhatsApp if phone present
+    if (order.phone) {
+      // Ensure phone includes country code (frontend should have it). Use 'whatsapp:+<number>'.
+      try {
+        await sendWhatsApp(order.phone, shortMsg);
+      } catch (err) {
+        console.error("Failed to send WhatsApp:", err);
+      }
+    }
+
+    // Send Email if email present
+    if (order.email) {
+      try {
+        await sendEmail(order.email, `Order ${order.order_code || order.id} status updated`, longMsg);
+      } catch (err) {
+        console.error("Failed to send email:", err);
+      }
+    }
+
+    res.json({ order });
 
   } catch (err) {
     console.error(err);

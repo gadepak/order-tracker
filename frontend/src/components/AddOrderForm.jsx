@@ -15,13 +15,33 @@ export default function AddOrderForm({ onClose, onCreated }) {
   const [paymentStatus, setPaymentStatus] = useState("PAID");
   const [creditDays, setCreditDays] = useState("");
 
+  // NEW CONTACT FIELDS
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState(""); // store as string (include country code)
+
   const [submitting, setSubmitting] = useState(false);
+
+  const validatePhone = (p) => {
+    // very simple validation: must be digits and length 10-15 (with country code)
+    const cleaned = p.replace(/\D/g, "");
+    return cleaned.length >= 10 && cleaned.length <= 15;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!trayType || !serialNo || !make) {
       alert("Tray Type, S.No, and Make are required");
+      return;
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))  {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    if (phone && !validatePhone(phone)) {
+      alert("Please enter a valid phone number (include country code)");
       return;
     }
 
@@ -45,6 +65,10 @@ export default function AddOrderForm({ onClose, onCreated }) {
         // NEW PAYMENT FIELDS
         payment_status: paymentStatus,
         credit_days: paymentStatus === "NOT_PAID" ? Number(creditDays) : null,
+
+        // CONTACT FIELDS
+        email:email||null,
+        phone:phone||null, // expected in E.164 or at least include country code
       });
 
       if (onCreated) onCreated();
@@ -71,6 +95,23 @@ export default function AddOrderForm({ onClose, onCreated }) {
       }}
     >
       <h4>Add New Order</h4>
+      {/* CONTACT FIELDS */}
+      <TextField
+        label="Customer Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        type="email"
+        fullWidth
+        placeholder="customer@example.com"
+      />
+
+      <TextField
+        label="Customer Phone (include country code)"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        fullWidth
+        placeholder="+9198XXXXXXXX"
+      />
 
       <TextField
         label="Tray Type"

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../api";
 import SearchBar from "../components/SearchBar";
 import AddOrderForm from "../components/AddOrderForm";
+import { Snackbar, Alert } from "@mui/material";
 
 import {
   AppBar,
@@ -106,6 +107,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
+  const [snack, setSnack] = useState({ open: false, message: "", severity: "success" });
+  const showMessage = (msg, severity = "success") => {
+  setSnack({ open: true, message: msg, severity });
+};
 
   const navigate = useNavigate();
   const theme = useTheme();
@@ -178,6 +183,15 @@ export default function AdminDashboard() {
   };
 
   const formatDate = (val) => (val ? new Date(val).toLocaleString() : "-");
+    const isOverdue = (o) => {
+    if (!o) return false;
+    if ((o.payment_status || "").toUpperCase() !== "NOT_PAID") return false;
+    const days = Number(o.credit_days || 0);
+    if (!days || days <= 0) return false;
+    const created = new Date(o.created_at);
+    const due = new Date(created.getTime() + days * 24 * 60 * 60 * 1000);
+    return new Date() > due;
+  };
 
   const statusOptions = ["CUTTING", "PERFORATED", "BENDING", "COMPLETED"];
 
@@ -320,22 +334,57 @@ export default function AdminDashboard() {
         <StatusChip label={o.status} status={o.status} />
       </TableCell>
 
-      {/* ❌ DELETE BUTTON — ONLY FOR PENDING & COMPLETED */}
+            {/* ACTIONS */}
       {activeTab !== "deleted" && (
-        <TableCell
-          onClick={(e) => e.stopPropagation()} // prevent selecting row
-        >
-          <Tooltip title="Move to Deleted">
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() => openDeleteDialog(o)}
-            >
-              <DeleteOutlineIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+        <TableCell onClick={(e) => e.stopPropagation()}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {/* Delete for non-deleted tabs */}
+            <Tooltip title="Move to Deleted">
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => openDeleteDialog(o)}
+              >
+                <DeleteOutlineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            {/* Pending Payment tab: show reminder button only when overdue */}
+            {activeTab === "Payment" && (
+              <>
+                {isOverdue(o) ? (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={async () => {
+                      try {
+                        // disable double-click by simple inline guard:
+                        // change button to disabled via element reference would be nicer,
+                        // but keeping it simple here
+                        const res = await API.post(`/orders/${o.id}/remind`);
+                        if (res.data?.success) {
+                          showMessage("Reminder sent successfully!", "success");
+                          loadOrders();
+                        } else {
+                        showMessage(`Failed: ${res.data?.error || "Unknown error"}`, "error");
+                        }
+                      } catch (err) {
+                        console.error("Send reminder error", err);
+                        showMessage("Failed to send reminder", "error");
+                      }
+                    }}
+                  >
+                    Send Reminder
+                  </Button>
+                ) : (
+                  <Typography variant="caption">Not due</Typography>
+                )}
+              </>
+            )}
+          </Stack>
         </TableCell>
       )}
+
     </TableRow>
   ))}
 </TableBody>
@@ -375,22 +424,24 @@ export default function AdminDashboard() {
                       </>
                     )}
 
-                    <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                      <Button
-                        variant="contained"
-                        onClick={() => updatePayment(selected.id, "PAID")}
-                      >
-                        Mark as PAID
-                      </Button>
+                    {/* only show payment action buttons when payment_status is not PAID */}
+{selected && (selected.payment_status || "").toUpperCase() !== "PAID" && (
+  <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+    <Button
+      variant="contained"
+      onClick={() => updatePayment(selected.id, "PAID")}
+    >
+      Mark as PAID
+    </Button>
 
-                      <Button
-                        variant="outlined"
-                        onClick={() => updatePayment(selected.id, "NOT_PAID")}
-                      >
-                        Mark as NOT PAID
-                      </Button>
-                    </Stack>
-
+    <Button
+      variant="outlined"
+      onClick={() => updatePayment(selected.id, "NOT_PAID")}
+    >
+      Mark as NOT PAID
+    </Button>
+  </Stack>
+)}
                     {/* STATUS UPDATE */}
                     <Divider sx={{ my: 2 }} />
                     <DetailLabel>Update Status</DetailLabel>
@@ -451,6 +502,21 @@ export default function AdminDashboard() {
     </Button>
   </DialogActions>
 </Dialog>
+<Snackbar
+  open={snack.open}
+  autoHideDuration={3000}
+  onClose={() => setSnack({ ...snack, open: false })}
+  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+>
+  <Alert
+    onClose={() => setSnack({ ...snack, open: false })}
+    severity={snack.severity}
+    variant="filled"
+    sx={{ width: "100%" }}
+  >
+    {snack.message}
+  </Alert>
+</Snackbar>
 
     </LayoutWrapper>
   );
