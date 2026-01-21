@@ -213,7 +213,7 @@ export default function AdminDashboard() {
           <Typography variant="caption" color={brandColors.textSecondary}>
             ADMIN CONSOLE
           </Typography>
-
+          
           <Typography
             variant="h6"
             sx={{
@@ -221,6 +221,7 @@ export default function AdminDashboard() {
               fontWeight: 700,
               letterSpacing: 6,
               margin: "0 auto",
+              color:"#0B3D2E",
             }}
           >
             prohiten
