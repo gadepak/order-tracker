@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {
-  console.log('>>> HIT BACKEND <<<', new Date().toISOString(), req.method, req.url);
+  console.log('>>> HIT BACKEND <<<', req.method, req.url);
   next();
 });
 
@@ -23,13 +23,14 @@ app.use('/api/orders', ordersRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api', reminderRoutes);
 
-// 🔴 THIS PART IS NON-NEGOTIABLE ON RAILWAY
+// 🚨 RAILWAY REQUIRES THIS
 const PORT = process.env.PORT;
 
 if (!PORT) {
-  throw new Error("PORT is not defined");
+  console.error("PORT is missing");
+  process.exit(1);
 }
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend running on ${PORT}`);
+  console.log(`Backend running on port ${PORT}`);
 });
