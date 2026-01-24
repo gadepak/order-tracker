@@ -27,6 +27,15 @@ app.use('/api', reminderRoutes);
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT 1 + 1 AS result');
+    res.json({ db: 'connected', result: rows[0].result });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ db: 'error', error: err.message });
+  }
+});
 
 const PORT = process.env.PORT || 4000;
 
