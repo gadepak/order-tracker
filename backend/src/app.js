@@ -23,14 +23,14 @@ app.use('/api/orders', ordersRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api', reminderRoutes);
 
-// 🚨 RAILWAY REQUIRES THIS
+// 🚨 RAILWAY REQUIRES THIS — NO FALLBACK
 const PORT = process.env.PORT;
 
 if (!PORT) {
-  console.error("PORT is missing");
+  console.error('PORT is not defined');
   process.exit(1);
 }
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend running on port ${PORT}`);
+  console.log(`Backend running on ${PORT}`);
 });
