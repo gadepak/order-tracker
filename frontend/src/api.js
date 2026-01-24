@@ -4,7 +4,7 @@ const API = axios.create({
 // baseURL: "http://localhost:4000/api",
   //baseURL: "/api"
   //"https://order-tracker-production-535d.up.railway.app/api",
-   baseURL: import.meta.env.VITE_API_URL,
+   baseURL:"https://order-tracker-production-124e.up.railway.app/api", 
 });
 
 // Attach JWT token to every request
