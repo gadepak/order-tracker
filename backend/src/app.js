@@ -8,7 +8,7 @@ const authRoutes = require('./routes/auth');
 const reminderRoutes = require('./routes/orderReminders');
 
 const app = express();
-
+const db = require('./db'); // or correct path to your mysql pool file
 app.use(cors());
 app.use(express.json());
 
