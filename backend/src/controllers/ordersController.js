@@ -264,47 +264,71 @@ async function updatePayment(req, res) {
 async function updateStatus(req, res) {
   try {
     const { id } = req.params;
-    const { status } = req.body;
 
+    // 🔒 Normalize & validate status
+    const rawStatus = req.body.status;
+    const status = String(rawStatus || '').trim().toUpperCase();
+
+    const allowedStatuses = [
+      'CUTTING',
+      'PERFORATED',
+      'BENDING',
+      'COMPLETED'
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        error: `Invalid status value: ${rawStatus}`
+      });
+    }
+
+    // ✅ Update status in DB
     await db.query(
       `UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?`,
       [status, id]
     );
 
-    // Fetch updated order (so we have email/phone/order_code)
-    const [rows] = await db.query(`SELECT * FROM orders WHERE id = ?`, [id]);
+    // Fetch updated order
+    const [rows] = await db.query(
+      `SELECT * FROM orders WHERE id = ?`,
+      [id]
+    );
 
-    if (!rows.length) return res.status(404).json({ error: "not found" });
+    if (!rows.length) {
+      return res.status(404).json({ error: "Order not found" });
+    }
 
     const order = rows[0];
 
     // Compose notification text
-    const shortMsg = `Order ${order.order_code || `#${order.id}`} status updated to: ${status}.`;
-    const longMsg = `Hello,\n\nYour order ${order.order_code || `#${order.id}`} status has changed to *${status}*.\n\nYou can track your order with the order code.\n\nRegards,\nYour Company`;
+    const shortMsg =
+      `Order ${order.order_code || `#${order.id}`} status updated to ${status}.`;
 
-    // Send WhatsApp if phone present
+    const longMsg =
+      `Hello,\n\nYour order ${order.order_code || `#${order.id}`} ` +
+      `status has changed to ${status}.\n\n` +
+      `You can track your order using the order code.\n\nRegards,\nYour Company`;
+
+    // 🔔 Send WhatsApp (NON-BLOCKING)
     if (order.phone) {
-      // Ensure phone includes country code (frontend should have it). Use 'whatsapp:+<number>'.
-      try {
-        await sendWhatsApp(order.phone, shortMsg);
-      } catch (err) {
-        console.error("Failed to send WhatsApp:", err);
-      }
+      sendWhatsApp(order.phone, shortMsg)
+        .catch(err => console.error("WhatsApp failed:", err.message));
     }
 
-    // Send Email if email present
+    // 📧 Send Email (NON-BLOCKING)
     if (order.email) {
-      try {
-        await sendEmail(order.email, `Order ${order.order_code || order.id} status updated`, longMsg);
-      } catch (err) {
-        console.error("Failed to send email:", err);
-      }
+      sendEmail(
+        order.email,
+        `Order ${order.order_code || order.id} status updated`,
+        longMsg
+      ).catch(err => console.error("Email failed:", err.message));
     }
 
-    res.json({ order });
+    // ✅ Always return success
+    res.json({ success: true, order });
 
   } catch (err) {
-    console.error(err);
+    console.error("updateStatus error:", err);
     res.status(500).json({ error: "update failed" });
   }
 }
