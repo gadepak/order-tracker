@@ -13,7 +13,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:3000',
-    'https://order-tracker-murex-mu.vercel.app'
+    'https://order-tracker-murex-mu.vercel.app',
+    'captivating-healing-production-4cfa.up.railway.app'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
