@@ -1,66 +1,37 @@
-const nodemailer = require("nodemailer");
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
-const {
-  SMTP_HOST,
-  SMTP_PORT,
-  SMTP_USER,
-  SMTP_PASS,
-  NOTIFY_EMAIL
-} = process.env;
-console.log("SMTP CONFIG:", {
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  user: process.env.SMTP_USER ? "SET" : "MISSING",
-  pass: process.env.SMTP_PASS ? "SET" : "MISSING"
-});
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: Number(SMTP_PORT || 587),
-  secure: false,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000
-});
+// Configure Brevo API
+const client = SibApiV3Sdk.ApiClient.instance;
+client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
 
-
-
-transporter.verify()
-  .then(() => {
-    console.log("✅ SMTP connected successfully");
-  })
-  .catch(err => {
-    console.error("❌ SMTP connection failed:", err.message);
-    process.exit(1); // stop server if email is mandatory
-  });
+const emailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 function sendOrderStatusNotification(order) {
-  if (!order) return;
+  if (!order || !order.email) return;
 
-  const { order_code, status } = order;
-  const targetEmail = NOTIFY_EMAIL || SMTP_USER;
-  if (!targetEmail) return;
-
-  const friendlyStatus = status
-    ? status.charAt(0).toUpperCase() + status.slice(1)
-    : "Updated";
-
-  transporter.sendMail({
-    from: `"Order Tracker" <${SMTP_USER}>`,
-    to: targetEmail,
-    subject: `Order ${order_code} status updated`,
-    text: `Order ${order_code} status changed to: ${friendlyStatus}`,
-    html: `
-      <p><strong>Order Update</strong></p>
-      <p>Order Code: <strong>${order_code}</strong></p>
-      <p>New Status: <strong>${friendlyStatus}</strong></p>
+  const sendEmail = {
+    to: [{ email: order.email }],
+    sender: {
+      email: "no-reply@yourdomain.com", // MUST be verified in Brevo
+      name: "Order Tracker"
+    },
+    subject: `Order ${order.order_code || order.id} status updated`,
+    htmlContent: `
+      <p><strong>Order Status Updated</strong></p>
+      <p>Order Code: <strong>${order.order_code || order.id}</strong></p>
+      <p>New Status: <strong>${order.status}</strong></p>
+      <br/>
+      <p>Thank you.</p>
     `
-  })
-  .then(() => console.log(`📧 Status email sent to ${targetEmail}`))
-  .catch(err => console.error("📧 Email send failed:", err.message));
+  };
+
+  emailApi.sendTransacEmail(sendEmail)
+    .then(() => {
+      console.log("📧 Status email sent via Brevo API");
+    })
+    .catch(err => {
+      console.error("📧 Brevo email failed:", err.message);
+    });
 }
 
 module.exports = { sendOrderStatusNotification };
