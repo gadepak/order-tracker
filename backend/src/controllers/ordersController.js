@@ -330,7 +330,6 @@ async function updateStatus(req, res) {
   }
 }
 
-// ==========================
 // SOFT DELETE ORDER
 // ==========================
 async function deleteOrder(req, res) {
