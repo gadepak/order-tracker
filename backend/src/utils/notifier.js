@@ -7,7 +7,12 @@ const {
   SMTP_PASS,
   NOTIFY_EMAIL
 } = process.env;
-
+console.log("SMTP CONFIG:", {
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  user: process.env.SMTP_USER ? "SET" : "MISSING",
+  pass: process.env.SMTP_PASS ? "SET" : "MISSING"
+});
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT || 587),
@@ -21,12 +26,7 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 10000
 });
 
-console.log("SMTP CONFIG:", {
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  user: process.env.SMTP_USER ? "SET" : "MISSING",
-  pass: process.env.SMTP_PASS ? "SET" : "MISSING"
-});
+
 
 transporter.verify()
   .then(() => {
