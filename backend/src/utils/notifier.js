@@ -21,11 +21,20 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 10000
 });
 
+/* 👇 PUT THIS RIGHT HERE (TOP-LEVEL) */
+transporter.verify()
+  .then(() => {
+    console.log("✅ SMTP connected successfully");
+  })
+  .catch(err => {
+    console.error("❌ SMTP connection failed:", err.message);
+    process.exit(1); // stop server if email is mandatory
+  });
+
 function sendOrderStatusNotification(order) {
   if (!order) return;
 
   const { order_code, status } = order;
-
   const targetEmail = NOTIFY_EMAIL || SMTP_USER;
   if (!targetEmail) return;
 
@@ -44,12 +53,8 @@ function sendOrderStatusNotification(order) {
       <p>New Status: <strong>${friendlyStatus}</strong></p>
     `
   })
-  .then(() => {
-    console.log(`Status email sent to ${targetEmail}`);
-  })
-  .catch(err => {
-    console.error("Email send failed:", err.message);
-  });
+  .then(() => console.log(`📧 Status email sent to ${targetEmail}`))
+  .catch(err => console.error("📧 Email send failed:", err.message));
 }
 
 module.exports = { sendOrderStatusNotification };
