@@ -21,7 +21,13 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 10000
 });
 
-/* 👇 PUT THIS RIGHT HERE (TOP-LEVEL) */
+console.log("SMTP CONFIG:", {
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  user: process.env.SMTP_USER ? "SET" : "MISSING",
+  pass: process.env.SMTP_PASS ? "SET" : "MISSING"
+});
+
 transporter.verify()
   .then(() => {
     console.log("✅ SMTP connected successfully");
