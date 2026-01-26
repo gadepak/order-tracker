@@ -1,7 +1,7 @@
 const db = require('../db');
 const twilio = require('twilio');
 const nodemailer = require('nodemailer');
-
+const { sendOrderStatusNotification } = require("../utils/notifier");
 const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
   ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
   : null;
@@ -317,11 +317,8 @@ async function updateStatus(req, res) {
 
     // 📧 Send Email (NON-BLOCKING)
     if (order.email) {
-      sendEmail(
-        order.email,
-        `Order ${order.order_code || order.id} status updated`,
-        longMsg
-      ).catch(err => console.error("Email failed:", err.message));
+      sendOrderStatusNotification(order);
+
     }
 
     // ✅ Always return success
