@@ -12,7 +12,7 @@ function sendOrderStatusNotification(order) {
   const sendEmail = {
     to: [{ email: order.email }],
     sender: {
-      email: "no-reply@yourdomain.com", // MUST be verified in Brevo
+      email: "aravstake5@gmail.com", // MUST be verified in Brevo
       name: "Order Tracker"
     },
     subject: `Order ${order.order_code || order.id} status updated`,
