@@ -132,7 +132,6 @@ export default function AdminDashboard() {
       if (err.response?.status === 401) {
         navigate("/admin/login");
       }
-      throw err;
     } finally {
       setLoading(false);
     }
