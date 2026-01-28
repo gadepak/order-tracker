@@ -1,6 +1,5 @@
 const db = require("../db");
 
-// paths RELATIVE to /api
 const ALLOWED_PATHS = [
   "/auth",
   "/maintenance/status"
@@ -8,7 +7,6 @@ const ALLOWED_PATHS = [
 
 async function checkMaintenance(req, res, next) {
   try {
-    // ✅ Allow auth & status check even if expired
     if (ALLOWED_PATHS.some(p => req.path.startsWith(p))) {
       return next();
     }
@@ -17,16 +15,13 @@ async function checkMaintenance(req, res, next) {
       "SELECT maintenance_expires_at FROM app_config WHERE id = 1"
     );
 
-    if (!rows.length) {
-      return next();
-    }
+    if (!rows.length) return next();
 
-    const expiry = new Date(rows[0].maintenance_expires_at);
-    const now = new Date();
+    const expired = new Date() > new Date(rows[0].maintenance_expires_at);
 
-    if (now > expiry) {
+    if (expired) {
       return res.status(403).json({
-        code: "MAINTENANCE_EXPIRED",
+        code: "MAINTENANCE_EXPIRED",   // 🔴 THIS WAS MISSING
         message:
           "Service expired. Please pay maintenance to continue your service."
       });
@@ -35,7 +30,7 @@ async function checkMaintenance(req, res, next) {
     next();
   } catch (err) {
     console.error("Maintenance check error:", err.message);
-    next(); // fail-open
+    next();
   }
 }
 

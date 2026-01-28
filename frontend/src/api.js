@@ -22,6 +22,7 @@ API.interceptors.response.use(
       error.response?.data?.code === "MAINTENANCE_EXPIRED"
     ) {
       window.location.href = "/service-expired";
+      return;
     }
     return Promise.reject(error);
   }
