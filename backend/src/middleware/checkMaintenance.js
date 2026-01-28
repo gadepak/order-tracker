@@ -1,15 +1,15 @@
 const db = require("../db");
 
-// APIs that should work even after expiry
+// paths RELATIVE to /api
 const ALLOWED_PATHS = [
-  "/api/auth",
-  "/health"
+  "/auth",
+  "/maintenance/status"
 ];
 
 async function checkMaintenance(req, res, next) {
   try {
-    // Allow some routes always
-    if (ALLOWED_PATHS.some(path => req.path.startsWith(path))) {
+    // ✅ Allow auth & status check even if expired
+    if (ALLOWED_PATHS.some(p => req.path.startsWith(p))) {
       return next();
     }
 
@@ -18,9 +18,7 @@ async function checkMaintenance(req, res, next) {
     );
 
     if (!rows.length) {
-      return res.status(500).json({
-        error: "Maintenance configuration missing"
-      });
+      return next();
     }
 
     const expiry = new Date(rows[0].maintenance_expires_at);
@@ -36,8 +34,8 @@ async function checkMaintenance(req, res, next) {
 
     next();
   } catch (err) {
-    console.error("Maintenance check failed:", err.message);
-    next(); // fail-open on DB issues
+    console.error("Maintenance check error:", err.message);
+    next(); // fail-open
   }
 }
 
