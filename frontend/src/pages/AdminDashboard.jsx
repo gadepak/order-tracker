@@ -129,7 +129,10 @@ export default function AdminDashboard() {
       setOrders(res.data.orders || []);
       setSelected(null);
     } catch (err) {
-      if (err.response?.status === 401) navigate("/admin/login");
+      if (err.response?.status === 401) {
+        navigate("/admin/login");
+      }
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -146,6 +149,7 @@ export default function AdminDashboard() {
       setSelected(res.data.order);
     } catch {
       alert("Failed to load order");
+
     }
   };
 
