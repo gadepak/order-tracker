@@ -26,7 +26,7 @@ function App() {
       .catch(() => {
         // ignore
       });
-  }, []);
+  }, [navigate]);
 
   return (
     <Routes>

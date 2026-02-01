@@ -17,7 +17,8 @@ app.use(cors({
     'https://order-tracker-puce.vercel.app',
     'https://order-tracker-murex-mu.vercel.app',
     'https://order-tracker-xi.vercel.app',
-    'https://order-tracker-tau.vercel.app'
+    'https://order-tracker-tau.vercel.app',
+    'https://order-tracker-wmgo.vercel.app'
   ],
   credentials: false,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
