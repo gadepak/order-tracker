@@ -9,21 +9,24 @@ import {
   Button,
   Typography,
   Alert,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
-// ---------- Brand / Design Tokens ----------
+/* ---------- Brand / Design Tokens ---------- */
 const brandColors = {
-  primary: "#088389",       // main accent
-  primarySoft: "#D7F2EE",   // soft teal background
-  background: "#F7F8F5",    // page background
-  surface: "#FFFFFF",       // card
-  border: "#E1E4DA",        // light border
-  textMain: "#111827",      // dark text
-  textSecondary: "#6B7280", // muted text
+  primary: "#088389",
+  background: "#F7F8F5",
+  surface: "#FFFFFF",
+  border: "#E1E4DA",
+  textMain: "#111827",
+  textSecondary: "#6B7280",
 };
 
-// ---------- Styled wrappers ----------
+/* ---------- Styled wrappers ---------- */
 const PageWrapper = styled("div")(() => ({
   minHeight: "100vh",
   display: "flex",
@@ -31,17 +34,17 @@ const PageWrapper = styled("div")(() => ({
   alignItems: "center",
   justifyContent: "center",
   backgroundColor: brandColors.background,
-  padding: "24px",
+  padding: 24,
 }));
 
 const CardWrapper = styled(Paper)(() => ({
   width: "100%",
   maxWidth: 420,
-  padding: "32px 28px",
-  borderRadius: 16,
+  padding: "34px 30px",
+  borderRadius: 18,
   border: `1px solid ${brandColors.border}`,
   backgroundColor: brandColors.surface,
-  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.05)",
+  boxShadow: "0 22px 48px rgba(15, 23, 42, 0.06)",
 }));
 
 export default function AdminLogin() {
@@ -49,6 +52,7 @@ export default function AdminLogin() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -59,11 +63,9 @@ export default function AdminLogin() {
 
     try {
       const res = await API.post("/auth/login", { email, password });
-      console.log("Login success:", res.data);
       localStorage.setItem("token", res.data.token);
       navigate("/admin/dashboard");
-    } catch (err) {
-      console.log("Login error:", err.response ? err.response.data : err);
+    } catch {
       setError("Invalid email or password");
     } finally {
       setSubmitting(false);
@@ -72,13 +74,13 @@ export default function AdminLogin() {
 
   return (
     <PageWrapper>
-      {/* Centered Brand Title */}
+      {/* Brand */}
       <Box sx={{ textAlign: "center", mb: 4 }}>
         <Typography
           variant="h5"
           sx={{
-            fontWeight: 700,
-            letterSpacing: 8,
+            fontWeight: 800,
+            letterSpacing: 7,
             textTransform: "uppercase",
             color: brandColors.primary,
           }}
@@ -93,15 +95,11 @@ export default function AdminLogin() {
         </Typography>
       </Box>
 
-      {/* Login Card */}
+      {/* Card */}
       <CardWrapper elevation={0}>
         <Typography
           variant="h6"
-          sx={{
-            fontWeight: 600,
-            mb: 0.5,
-            color: brandColors.textMain,
-          }}
+          sx={{ fontWeight: 600, mb: 0.5, color: brandColors.textMain }}
         >
           Admin Login
         </Typography>
@@ -122,28 +120,36 @@ export default function AdminLogin() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              InputLabelProps={{ shrink: true }}
             />
           </Box>
 
           <Box sx={{ mb: 2.5 }}>
             <TextField
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               fullWidth
               size="small"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              InputLabelProps={{ shrink: true }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      onClick={() => setShowPassword((p) => !p)}
+                      aria-label="toggle password visibility"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           </Box>
 
           {error && (
-            <Alert
-              severity="error"
-              sx={{ mb: 2.5, borderRadius: 2 }}
-            >
+            <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }}>
               {error}
             </Alert>
           )}
@@ -157,14 +163,14 @@ export default function AdminLogin() {
               mb: 2,
               textTransform: "none",
               borderRadius: 999,
-              paddingY: 1.1,
+              py: 1.15,
               fontWeight: 600,
               backgroundColor: brandColors.primary,
-              color: "#FFFFFF",
+              color: "#fff",
               boxShadow: "none",
               "&:hover": {
                 backgroundColor: "#066C6C",
-                boxShadow: "0 10px 22px rgba(8, 131, 137, 0.28)",
+                boxShadow: "0 12px 26px rgba(8, 131, 137, 0.3)",
               },
             }}
           >

@@ -412,22 +412,42 @@ export default function AdminDashboard() {
                   Update Status
                 </Typography>
 
-                <Stack direction="row" spacing={1} mt={1}>
-                  {statusOptions.map((s) => (
-                    <Button
-                      key={s}
-                      size="small"
-                      variant={selected.status === s ? "contained" : "outlined"}
-                      sx={{
-                        color: selected.status === s ? "#fff" : colors.text,
-                        borderColor: colors.border,
-                      }}
-                      onClick={() => updateStatus(selected.id, s)}
-                    >
-                      {s}
-                    </Button>
-                  ))}
-                </Stack>
+                <Stack
+  direction="row"
+  spacing={1.2}
+  mt={1.5}
+  flexWrap="wrap"
+  useFlexGap
+>
+  {statusOptions.map((s) => (
+    <Button
+      key={s}
+      size="small"
+      variant={selected.status === s ? "contained" : "outlined"}
+      onClick={() => updateStatus(selected.id, s)}
+      sx={{
+        minWidth: 110,
+        height: 36,
+        fontWeight: 600,
+        textTransform: "none",
+        borderRadius: 1.5,
+        color: selected.status === s ? "#fff" : colors.text,
+        borderColor: colors.border,
+        backgroundColor:
+          selected.status === s ? brand.primary : "transparent",
+        "&:hover": {
+          backgroundColor:
+            selected.status === s
+              ? brand.primary
+              : colors.surfaceAlt,
+        },
+      }}
+    >
+      {s}
+    </Button>
+  ))}
+</Stack>
+
               </>
             )}
           </SectionCard>
