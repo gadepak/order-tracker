@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import AddOrderForm from "../components/AddOrderForm";
-import { Snackbar, Alert, Badge } from "@mui/material";
+import { Snackbar, Alert } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -90,7 +90,13 @@ const statusBarColor = (status) => {
       return "#9CA3AF";
   }
 };
-
+const remainingCreditDays = (lastDate, creditDays) => {
+  if (!lastDate || !creditDays) return null;
+  const last = new Date(lastDate);
+  const expiry = new Date(last);
+  expiry.setDate(expiry.getDate() + creditDays);
+  return Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
+};
 const tabLabel = (tab) => {
   if (tab === "pending") return "Pending Orders";
   if (tab === "completed") return "Completed Orders";
@@ -98,6 +104,7 @@ const tabLabel = (tab) => {
   if (tab === "deleted") return "Deleted Orders";
   return "";
 };
+
 
 /* ---------------- COMPONENT ---------------- */
 export default function AdminDashboard() {
@@ -166,6 +173,12 @@ export default function AdminDashboard() {
   };
 
   const statusOptions = ["CUTTING", "PERFORATED", "BENDING", "COMPLETED"];
+  const creditDaysLeft =
+  selected &&
+  remainingCreditDays(
+    selected.created_at,
+    selected.credit_days
+  );
 
   /* ---------------- RENDER ---------------- */
   return (
@@ -176,27 +189,27 @@ export default function AdminDashboard() {
         sx={{
           height: NAVBAR_HEIGHT,
           justifyContent: "center",
-          background: colors.surface,
+          background: brand.primary,
           borderBottom: `1px solid ${colors.border}`,
         }}
       >
         <Toolbar>
           {/* LEFT */}
           <Box>
-            <Typography fontWeight={800} letterSpacing={4} sx={{ color: brand.primary }}>
+            <Typography fontWeight={800} letterSpacing={4} sx={{ color: "#fff" }}>
               PROHITEN
             </Typography>
-            <Typography variant="caption" sx={{ color: colors.textMuted }}>
+            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)" }}>
               Admin Console
             </Typography>
           </Box>
 
           {/* CENTER */}
           <Box flexGrow={1} textAlign="center">
-            <Typography sx={{ color: colors.text, fontWeight: 600 }}>
+            <Typography sx={{ color: "#fff", fontWeight: 600 }}>
               {tabLabel(activeTab)}
             </Typography>
-            <Typography variant="caption" sx={{ color: colors.textMuted }}>
+            <Typography variant="caption" sx={{ color:"rgba(255,255,255,0.8)" }}>
               {orders.length} orders
             </Typography>
           </Box>
@@ -226,7 +239,7 @@ export default function AdminDashboard() {
         </Toolbar>
       </AppBar>
       {/* CONTENT */}
-      <Box p={{ xs: 2, md: 4 }}>
+      <Box p={4}>
         {/* HEADER */}
         <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={3}>
           <Typography variant="h4" fontWeight={700} sx={{ color: colors.text }}>
@@ -300,35 +313,41 @@ export default function AdminDashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        sx={{
-                          cursor: "pointer",
-                          position: "relative",
-                          "& td": { color: colors.text },
-                          "&::before": {
-                            content: '""',
-                            position: "absolute",
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: 4,
-                            backgroundColor: statusBarColor(o.status),
-                          },
-                        }}
                       >
-                        <TableCell>{o.order_code}</TableCell>
+                        <TableCell
+  sx={{
+    position: "relative",
+    pl: 2.5, // space for the strip
+  }}
+>
+  <Box
+    sx={{
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 4,
+      backgroundColor: statusBarColor(o.status),
+      borderRadius: "2px 0 0 2px",
+    }}
+  />
+  {o.order_code}
+</TableCell>
+
                         <TableCell>{o.tray_type}</TableCell>
                         <TableCell>{o.make}</TableCell>
                         <TableCell>
-                          <Chip
-                            label={o.status}
-                            size="small"
-                            sx={{
-                              background: colors.surfaceAlt,
-                              color: colors.text,
-                              border: `1px solid ${colors.border}`,
-                            }}
-                          />
-                        </TableCell>
+    <Chip
+      label={o.status}
+      size="small"
+      sx={{
+        backgroundColor: statusBarColor(o.status),
+        color: "#fff",
+        fontWeight: 600,
+      }}
+    />
+  </TableCell>
+
                         <TableCell
                           align="right"
                           onClick={(e) => e.stopPropagation()}
@@ -407,6 +426,88 @@ export default function AdminDashboard() {
                 )}
 
                 <Divider sx={{ my: 2, borderColor: colors.border }} />
+                {activeTab === "Payment" && (
+  <>
+  {console.log("SELECTED ORDER:", selected)}
+    <Typography variant="caption" sx={{ color: colors.textMuted }}>
+      Credit Details
+    </Typography>
+                {console.log("SELECTED ORDER:", selected)}
+
+    <Typography sx={{ color: colors.text, mt: 0.5 }}>
+      Last Credit Date:&nbsp;
+      <span style={{ color: brand.primary, fontWeight: 600 }}>
+        {new Date(
+  selected.last_credit_date || selected.created_at
+).toLocaleDateString()}
+
+
+      </span>
+    </Typography>
+
+    <Typography
+      sx={{
+        mt: 0.5,
+        fontWeight: 700,
+        color:
+          remainingCreditDays(
+            selected.last_credit_date,
+            selected.credit_days
+          ) <= 5
+            ? "#DC2626"
+            : "#16A34A",
+      }}
+    >
+      Remaining Days:&nbsp;
+      {remainingCreditDays(
+  selected.last_credit_date || selected.created_at,
+  selected.credit_days
+)
+}
+    </Typography>
+
+    <Divider sx={{ my: 2, borderColor: colors.border }} />
+    {creditDaysLeft !== null && creditDaysLeft <= 0 && (
+  <Button
+    fullWidth
+    size="small"
+    variant="contained"
+    sx={{
+      mt: 2,
+      backgroundColor: "#DC2626",
+      fontWeight: 600,
+      textTransform: "none",
+      "&:hover": {
+        backgroundColor: "#B91C1C",
+      },
+    }}
+    onClick={async () => {
+      try {
+        await API.post(`/orders/${selected.id}/remind`);
+
+        setSnack({
+          open: true,
+          severity: "success",
+          message: "Payment reminder sent (Email & WhatsApp)",
+        });
+      } catch (err) {
+        setSnack({
+          open: true,
+          severity: "error",
+          message:
+            err.response?.data?.error ||
+            "Failed to send reminder",
+        });
+      }
+    }}
+  >
+    Send Notification
+  </Button>
+)}
+
+
+  </>
+)}
 
                 <Typography variant="caption" sx={{ color: colors.textMuted }}>
                   Update Status
