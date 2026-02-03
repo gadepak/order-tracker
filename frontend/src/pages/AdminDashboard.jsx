@@ -4,7 +4,8 @@ import API from "../api";
 import AddOrderForm from "../components/AddOrderForm";
 import { Snackbar, Alert } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
 import {
   AppBar,
   Toolbar,
@@ -40,7 +41,11 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 
 /* ---------------- CONSTANTS ---------------- */
-const NAVBAR_HEIGHT = 76;
+const NAVBAR_HEIGHT = {
+  xs: 96,  // mobile
+  sm: 76,  // tablet & up
+};
+
 
 /* ---------------- THEME TOKENS ---------------- */
 const brand = {
@@ -120,6 +125,58 @@ export default function AdminDashboard() {
   const [snack, setSnack] = useState({ open: false, message: "", severity: "success" });
 
   const colors = darkMode ? brand.dark : brand.light;
+  const theme = createTheme({
+  palette: {
+    mode: darkMode ? "dark" : "light",
+
+    primary: {
+      main: brand.primary,
+    },
+
+    background: {
+      default: colors.bg,
+      paper: colors.surface,
+    },
+
+    text: {
+      primary: colors.text,
+      secondary: colors.textMuted,
+    },
+
+    divider: colors.border,
+  },
+
+  components: {
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          color: colors.text,
+        },
+      },
+    },
+
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          color: colors.text,
+          borderBottom: `1px solid ${colors.border}`,
+        },
+      },
+    },
+
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          color: colors.textMuted,
+          "&.Mui-selected": {
+            color: brand.primary,
+          },
+        },
+      },
+    },
+  },
+});
+
 
   /* ---------------- API ---------------- */
   const loadOrders = useCallback(async () => {
@@ -182,6 +239,8 @@ export default function AdminDashboard() {
 
   /* ---------------- RENDER ---------------- */
   return (
+     <ThemeProvider theme={theme}>
+    <CssBaseline />
     <Page sx={{ background: colors.bg, pt: `${NAVBAR_HEIGHT}px` }}>
       {/* ================= NAVBAR ================= */}
       <AppBar
@@ -190,66 +249,114 @@ export default function AdminDashboard() {
           height: NAVBAR_HEIGHT,
           justifyContent: "center",
           background: brand.primary,
+          color: "#fff",
           borderBottom: `1px solid ${colors.border}`,
         }}
       >
-        <Toolbar>
+        <Toolbar
+  sx={{
+    display: "flex",
+    flexDirection: { xs: "column", sm: "row" },
+    alignItems: { xs: "flex-start", sm: "center" },
+    gap: { xs: 1, sm: 0 },
+    py: { xs: 1.2, sm: 0 },
+  }}
+>
+
           {/* LEFT */}
           <Box>
-            <Typography fontWeight={800} letterSpacing={4} sx={{ color: "#fff" }}>
-              PROHITEN
-            </Typography>
-            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)" }}>
-              Admin Console
-            </Typography>
-          </Box>
+  <Typography
+    fontWeight={800}
+    letterSpacing={4}
+    sx={{ color: "#fff", fontSize: { xs: 16, sm: 18 } }}
+  >
+    PROHITEN
+  </Typography>
+
+  {/* Hide subtitle on phones */}
+  <Typography
+    variant="caption"
+    sx={{
+      color: "rgba(255,255,255,0.8)",
+      display: { xs: "none", sm: "block" },
+    }}
+  >
+    Admin Console
+  </Typography>
+</Box>
+
 
           {/* CENTER */}
-          <Box flexGrow={1} textAlign="center">
-            <Typography sx={{ color: "#fff", fontWeight: 600 }}>
-              {tabLabel(activeTab)}
-            </Typography>
-            <Typography variant="caption" sx={{ color:"rgba(255,255,255,0.8)" }}>
-              {orders.length} orders
-            </Typography>
-          </Box>
+          <Box
+  flexGrow={1}
+  textAlign="center"
+  sx={{ display: { xs: "none", sm: "block" } }}
+>
+  <Typography sx={{ color: "#fff", fontWeight: 600 }}>
+    {tabLabel(activeTab)}
+  </Typography>
+  <Typography
+    variant="caption"
+    sx={{ color: "rgba(255,255,255,0.8)" }}
+  >
+    {orders.length} orders
+  </Typography>
+</Box>
+
 
           {/* RIGHT */}
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
-              <IconButton onClick={() => setDarkMode(!darkMode)} sx={{ color: colors.text }}>
-                {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
-              </IconButton>
-            </Tooltip>
+          <Stack
+  direction="row"
+  spacing={1}
+  alignItems="center"
+  sx={{
+    width: { xs: "100%", sm: "auto" },
+    justifyContent: { xs: "space-between", sm: "flex-end" },
+  }}
+>
+  <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
+    <IconButton onClick={() => setDarkMode(!darkMode)} sx={{ color: "#fff" }}>
+      {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
+    </IconButton>
+  </Tooltip>
 
-            <Button
-              size="small"
-              startIcon={<AddIcon />}
-              variant="contained"
-              sx={{ background: brand.primary }}
-              onClick={() => setShowAddOrder(true)}
-            >
-              New Order
-            </Button>
+  {/* Hide text, keep icon on mobile */}
+  <Button
+    size="small"
+    startIcon={<AddIcon />}
+    variant="contained"
+    sx={{
+      background: brand.primary,
+      minWidth: { xs: 40, sm: "auto" },
+      px: { xs: 1, sm: 2 },
+    }}
+    onClick={() => setShowAddOrder(true)}
+  >
+    <Box sx={{ display: { xs: "none", sm: "block" } }}>
+      New Order
+    </Box>
+  </Button>
 
-            <IconButton onClick={logout} sx={{ color: colors.text }}>
-              <LogoutIcon />
-            </IconButton>
-          </Stack>
+  <IconButton onClick={logout} sx={{ color: "#fff" }}>
+    <LogoutIcon />
+  </IconButton>
+</Stack>
+
         </Toolbar>
       </AppBar>
       {/* CONTENT */}
       <Box p={4}>
         {/* HEADER */}
         <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={3}>
-          <Typography variant="h4" fontWeight={700} sx={{ color: colors.text }}>
+          <Typography variant="h4" fontWeight={700} sx={{ color: darkMode ? "#fff" : colors.text }}>
             Orders Dashboard
           </Typography>
 
           <Box flexGrow={1} />
 
           <Stack direction="row" spacing={1}>
-            <IconButton onClick={loadOrders} sx={{ color: colors.text }}>
+            <IconButton onClick={loadOrders} sx={{ color: darkMode ? "#fff" : colors.text }}
+>
               <RefreshIcon />
             </IconButton>
 
@@ -392,7 +499,7 @@ export default function AdminDashboard() {
               </Typography>
             ) : (
               <>
-                <Typography variant="h6" fontWeight={700} sx={{ color: colors.text }}>
+                <Typography variant="h6" fontWeight={700} sx={{ color: darkMode ? "#fff" : colors.text }}>
                   {selected.order_code}
                 </Typography>
 
@@ -595,5 +702,6 @@ export default function AdminDashboard() {
         </Alert>
       </Snackbar>
     </Page>
+    </ThemeProvider>
   );
 }
